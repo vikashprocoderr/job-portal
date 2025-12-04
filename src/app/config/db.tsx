@@ -1,8 +1,6 @@
 import 'dotenv/config';
-import { drizzle } from "drizzle-orm/mysql2";
-import mysql2 from "mysql2/promise";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 
-const pool = mysql2.createPool({
-    uri: process.env.DATABASE_URL as string,
-})
-export const db = drizzle(pool);
+const client = postgres(process.env.DATABASE_URL as string);
+export const db = drizzle(client);
