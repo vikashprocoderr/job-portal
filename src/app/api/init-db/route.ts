@@ -1,15 +1,13 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/app/config/db';
-import { users, jobs, applications, sessions, savedJobs } from '@/drizzle/drizzle';
-import { sql } from 'drizzle-orm';
+import postgres from 'postgres';
+
+const SQL = postgres(process.env.DATABASE_URL as string);
 
 export async function GET(req: Request) {
   try {
-    // Check if tables exist, if not create them
-    console.log('Initializing database schema...');
+    console.log('Initializing database schema (using postgres client)...');
 
-    // Create users table
-    await db.execute(sql`
+    await SQL`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
@@ -22,10 +20,9 @@ export async function GET(req: Request) {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         deleted_at TIMESTAMP
       );
-    `);
+    `;
 
-    // Create jobs table
-    await db.execute(sql`
+    await SQL`
       CREATE TABLE IF NOT EXISTS jobs (
         id SERIAL PRIMARY KEY,
         title VARCHAR(255) NOT NULL,
@@ -42,10 +39,9 @@ export async function GET(req: Request) {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         deleted_at TIMESTAMP
       );
-    `);
+    `;
 
-    // Create applications table
-    await db.execute(sql`
+    await SQL`
       CREATE TABLE IF NOT EXISTS applications (
         id SERIAL PRIMARY KEY,
         job_id INTEGER NOT NULL,
@@ -57,10 +53,9 @@ export async function GET(req: Request) {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         deleted_at TIMESTAMP
       );
-    `);
+    `;
 
-    // Create sessions table
-    await db.execute(sql`
+    await SQL`
       CREATE TABLE IF NOT EXISTS sessions (
         id VARCHAR(255) PRIMARY KEY,
         user_id INTEGER NOT NULL,
@@ -70,10 +65,9 @@ export async function GET(req: Request) {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
-    `);
+    `;
 
-    // Create saved_jobs table
-    await db.execute(sql`
+    await SQL`
       CREATE TABLE IF NOT EXISTS saved_jobs (
         id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL,
@@ -81,22 +75,21 @@ export async function GET(req: Request) {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         deleted_at TIMESTAMP
       );
-    `);
+    `;
+
+    await SQL.end({ timeout: 5 });
 
     console.log('✅ Database schema initialized successfully!');
-
-    return NextResponse.json({
-      status: 'success',
-      message: 'Database schema initialized'
-    });
+    return NextResponse.json({ status: 'success', message: 'Database schema initialized' });
   } catch (error) {
+    // Log full error details for debugging (stack + cause if available)
     console.error('❌ Error initializing database:', error);
-    return NextResponse.json(
-      {
-        status: 'error',
-        message: error instanceof Error ? error.message : 'Failed to initialize database'
-      },
-      { status: 500 }
-    );
+    if (error instanceof Error) {
+      console.error('Error stack:', error.stack);
+      // @ts-ignore
+      if ((error as any).cause) console.error('Error cause:', (error as any).cause);
+    }
+    try { await SQL.end({ timeout: 5 }); } catch (e) {}
+    return NextResponse.json({ status: 'error', message: error instanceof Error ? String(error.message) : 'Failed to initialize database' }, { status: 500 });
   }
 }
