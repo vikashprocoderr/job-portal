@@ -1,3 +1,6 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 import { NextResponse } from 'next/server';
 
 export async function GET(req: Request) {
@@ -15,18 +18,22 @@ export async function GET(req: Request) {
     const cookie = req.headers.get('cookie') || '';
     const match = cookie.match(/authToken=([^;]+)/);
     const token = match ? decodeURIComponent(match[1]) : null;
-    if (!token)
+
+    if (!token) {
       return NextResponse.json(
         { status: 'error', message: 'Not authenticated' },
         { status: 401 }
       );
+    }
 
     const payload = verifyToken(token);
-    if (!payload)
+
+    if (!payload) {
       return NextResponse.json(
         { status: 'error', message: 'Invalid token' },
         { status: 401 }
       );
+    }
 
     const rows = await db
       .select({ jobId: applications.jobId })
@@ -44,6 +51,7 @@ export async function GET(req: Request) {
       status: 'success',
       data: jobIds,
     });
+
   } catch (error) {
     console.error('Error fetching applied jobs:', error);
     return NextResponse.json(
