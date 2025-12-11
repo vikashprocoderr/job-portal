@@ -1,9 +1,6 @@
 'use server';
 
-import { db } from '@/app/config/db';
-import { jobs } from '@/drizzle/drizzle';
 import { cookies } from 'next/headers';
-import { verifyToken } from '@/lib/jwt';
 
 export async function createJob(jobData: {
     title: string;
@@ -16,6 +13,13 @@ export async function createJob(jobData: {
     skills?: string;
 }) {
     try {
+        // Dynamic imports to avoid import-time DB/JWT loading
+        const [{ db }, { jobs }, { verifyToken }] = await Promise.all([
+            import('@/app/config/db'),
+            import('@/drizzle/drizzle'),
+            import('@/components/lib/jwt')
+        ]);
+
         // Get token from cookie
         const cookieStore = await cookies();
         const token = cookieStore.get('authToken')?.value;

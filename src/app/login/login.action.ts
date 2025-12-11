@@ -1,15 +1,18 @@
 "use server";
-import { db } from "../config/db";
-import { users } from "@/drizzle/drizzle";
 import argon2 from "argon2";
-import { eq } from "drizzle-orm";
-import { generateToken } from "@/lib/jwt";
 
 export const loginAction = async (data: {
     email: string;
     password: string;
 }) => {
     try {
+        const [{ db }, { users }, { eq }, { generateToken }] = await Promise.all([
+            import("../config/db"),
+            import("@/drizzle/drizzle"),
+            import("drizzle-orm"),
+            import("@/components/lib/jwt")
+        ]);
+
         const { email, password } = data;
         
         if (!email || !password) {

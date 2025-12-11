@@ -1,13 +1,17 @@
 'use server';
 
-import { db } from '@/app/config/db';
-import { users } from '@/drizzle/drizzle';
-import { eq } from 'drizzle-orm';
 import { cookies } from 'next/headers';
-import { verifyToken } from '@/lib/jwt';
 
 export async function updateProfile(name: string, profilePic?: string) {
     try {
+        // Dynamic imports to avoid import-time DB/JWT loading
+        const [{ db }, { users }, { eq }, { verifyToken }] = await Promise.all([
+            import('@/app/config/db'),
+            import('@/drizzle/drizzle'),
+            import('drizzle-orm'),
+            import('@/components/lib/jwt')
+        ]);
+
         // Get token from cookie
         const cookieStore = await cookies();
         const token = cookieStore.get('authToken')?.value;

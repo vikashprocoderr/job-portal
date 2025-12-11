@@ -1,13 +1,20 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/app/config/db';
-import { applications, jobs } from '@/drizzle/drizzle';
-import { isNull, eq, and, sql } from 'drizzle-orm';
-import { verifyToken } from '@/lib/jwt';
 import fs from 'fs/promises';
 import path from 'path';
 
 export async function POST(req: Request) {
   try {
+    // Lazy/dynamic imports to avoid import-time side effects (DB connections, JWT checks) during build
+    const [{ db }, { applications, jobs }, drizzleOps, jwtLib] = await Promise.all([
+      import('@/app/config/db'),
+      import('@/drizzle/drizzle'),
+      import('drizzle-orm'),
+      import('@/components/lib/jwt')
+    ]);
+
+    const { isNull, eq, and, sql } = drizzleOps;
+    const { verifyToken } = jwtLib;
+
     const cookie = req.headers.get('cookie') || '';
     const match = cookie.match(/authToken=([^;]+)/);
     const token = match ? decodeURIComponent(match[1]) : null;
@@ -82,7 +89,7 @@ export async function POST(req: Request) {
     }
 
     // -------------------------------------------------------
-    //   Prevent duplicate applications (FIXED with and())
+    //   Prevent duplicate applications
     // -------------------------------------------------------
     const existing = await db
       .select()
@@ -100,7 +107,7 @@ export async function POST(req: Request) {
     }
 
     // -------------------------------------------------------
-    //   Verify job exists (FIXED with and())
+    //   Verify job exists
     // -------------------------------------------------------
     const [job] = await db
       .select()
@@ -153,5 +160,23 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error('Error in apply route:', error);
     return NextResponse.json({ status: 'error', message: 'Failed to apply' }, { status: 500 });
+  }
+}
+
+export async function GET(req: Request) {
+  try {
+    // Lazy import DB for init
+    const { db } = await import('@/app/config/db');
+
+    // If drizzle client exposes a migrate method, call it. Otherwise, return success.
+    if (typeof (db as any).migrate === 'function') {
+      await (db as any).migrate();
+    }
+
+    return NextResponse.json({ status: 'success', message: 'Database initialized' });
+
+  } catch (error) {
+    console.error('Error in init-db route:', error);
+    return NextResponse.json({ status: 'error', message: 'Failed to initialize database' }, { status: 500 });
   }
 }

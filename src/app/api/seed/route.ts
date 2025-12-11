@@ -1,4 +1,4 @@
-import { seedJobs } from '@/lib/seed';
+import { seedJobs } from '@/components/lib/seed';
 
 export async function GET() {
     try {

@@ -1,5 +1,4 @@
-import { db } from '@/app/config/db';
-import { jobs } from '@/drizzle/drizzle';
+import { jobs as jobsTable } from '@/drizzle/drizzle';
 
 const dummyJobs = [
     {
@@ -126,10 +125,11 @@ const dummyJobs = [
 
 export async function seedJobs() {
     try {
+        const { db } = await import('@/app/config/db');
         console.log('🌱 Seeding dummy jobs...');
         
         for (const job of dummyJobs) {
-            await db.insert(jobs).values(job);
+            await db.insert(jobsTable).values(job);
         }
         
         console.log('✅ Successfully seeded', dummyJobs.length, 'dummy jobs');

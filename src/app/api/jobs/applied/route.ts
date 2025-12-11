@@ -1,11 +1,17 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/app/config/db';
-import { applications } from '@/drizzle/drizzle';
-import { eq, isNull, and } from 'drizzle-orm';
-import { verifyToken } from '@/lib/jwt';
 
 export async function GET(req: Request) {
   try {
+    const [{ db }, { applications }, drizzleOps, jwtLib] = await Promise.all([
+      import('@/app/config/db'),
+      import('@/drizzle/drizzle'),
+      import('drizzle-orm'),
+      import('@/components/lib/jwt')
+    ]);
+
+    const { eq, isNull, and } = drizzleOps;
+    const { verifyToken } = jwtLib;
+
     const cookie = req.headers.get('cookie') || '';
     const match = cookie.match(/authToken=([^;]+)/);
     const token = match ? decodeURIComponent(match[1]) : null;
@@ -22,7 +28,6 @@ export async function GET(req: Request) {
         { status: 401 }
       );
 
-    // FIXED ✔️ and() use kiya gaya hai
     const rows = await db
       .select({ jobId: applications.jobId })
       .from(applications)

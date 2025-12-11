@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
 import postgres from 'postgres';
 
-const SQL = postgres(process.env.DATABASE_URL as string);
-
 export async function GET(req: Request) {
+  let SQL: ReturnType<typeof postgres> | null = null;
   try {
     console.log('Initializing database schema (using postgres client)...');
+
+    // Create postgres client inside handler to avoid import-time connection attempts
+    SQL = postgres(process.env.DATABASE_URL as string);
 
     await SQL`
       CREATE TABLE IF NOT EXISTS users (
@@ -89,7 +91,9 @@ export async function GET(req: Request) {
       // @ts-ignore
       if ((error as any).cause) console.error('Error cause:', (error as any).cause);
     }
-    try { await SQL.end({ timeout: 5 }); } catch (e) {}
+    if (SQL) {
+      try { await SQL.end({ timeout: 5 }); } catch (e) {}
+    }
     return NextResponse.json({ status: 'error', message: error instanceof Error ? String(error.message) : 'Failed to initialize database' }, { status: 500 });
   }
 }

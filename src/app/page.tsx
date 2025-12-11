@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/context/AuthContext";
+import { useAuth } from "@/components/lib/context/AuthContext";
 import { Briefcase, Users, TrendingUp, CheckCircle, ArrowRight } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useEffect } from "react";

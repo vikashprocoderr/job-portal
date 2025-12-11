@@ -1,12 +1,16 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/app/config/db';
-import { savedJobs } from '@/drizzle/drizzle';
-import { eq, and, isNull } from 'drizzle-orm';
-import { verifyToken } from '@/lib/jwt';
 
 // GET: return array of jobIds saved by current user
 export async function GET(req: Request) {
   try {
+    const [{ db }, { savedJobs }, drizzleOps, jwtLib] = await Promise.all([
+      import('@/app/config/db'),
+      import('@/drizzle/drizzle'),
+      import('drizzle-orm'),
+      import('@/components/lib/jwt')
+    ]);
+    const { eq, and, isNull } = drizzleOps;
+    const { verifyToken } = jwtLib;
     const cookie = req.headers.get('cookie') || '';
     const match = cookie.match(/authToken=([^;]+)/);
     const token = match ? decodeURIComponent(match[1]) : null;
@@ -25,6 +29,14 @@ export async function GET(req: Request) {
 // POST: save a job
 export async function POST(req: Request) {
   try {
+    const [{ db }, { savedJobs }, drizzleOps, jwtLib] = await Promise.all([
+      import('@/app/config/db'),
+      import('@/drizzle/drizzle'),
+      import('drizzle-orm'),
+      import('@/components/lib/jwt')
+    ]);
+    const { eq, and } = drizzleOps;
+    const { verifyToken } = jwtLib;
     const cookie = req.headers.get('cookie') || '';
     const match = cookie.match(/authToken=([^;]+)/);
     const token = match ? decodeURIComponent(match[1]) : null;
@@ -53,6 +65,14 @@ export async function POST(req: Request) {
 // DELETE: unsave a job
 export async function DELETE(req: Request) {
   try {
+    const [{ db }, { savedJobs }, drizzleOps, jwtLib] = await Promise.all([
+      import('@/app/config/db'),
+      import('@/drizzle/drizzle'),
+      import('drizzle-orm'),
+      import('@/components/lib/jwt')
+    ]);
+    const { eq, and, isNull } = drizzleOps;
+    const { verifyToken } = jwtLib;
     const cookie = req.headers.get('cookie') || '';
     const match = cookie.match(/authToken=([^;]+)/);
     const token = match ? decodeURIComponent(match[1]) : null;

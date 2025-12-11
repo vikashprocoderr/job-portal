@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { User, Lock } from 'lucide-react'
 import { toast } from 'sonner'
 import { loginAction } from './login.action'
-import { useAuth } from '@/lib/context/AuthContext'
+import { useAuth } from '@/components/lib/context/AuthContext'
 import { useRouter } from 'next/navigation'
 import { setAuthCookie } from '@/app/auth.cookies'
 
